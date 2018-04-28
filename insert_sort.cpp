@@ -27,7 +27,7 @@ void InsertSort(int arr[],int len)
 		{
 			if(arr[j-1] < arr[j]) break;
 			ShowArray(arr,len);
-			char remember = arr[j-1];
+			int remember = arr[j-1];
 			arr[j-1] = arr[j];
 			arr[j] = remember;
 		}
@@ -44,9 +44,9 @@ inline void ShowArray(int arr[],int len)
 }
 int main()
 {
-	int arr[11]{'\0',};
+	int arr[10000]{'\0',};
 	int n;
-	cout << "입력받을 개수 : ";
+	cout << "how many? : ";
 	cin >> n;
 	for(int i=0;i<n;i++)
 	{
