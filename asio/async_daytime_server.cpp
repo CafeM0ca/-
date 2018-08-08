@@ -34,7 +34,8 @@ public:
   void start()
   {
     message_ = make_daytime_string();
-	//비동기 작업을 시작할 때 boost:;bind()를 사용하는 경우 핸들러의 매개 변수 목록과 일치하는 인ㄴ수만 지정해야한다. 여기서는 placeholders들이 handle_write()에서 사용되지 않았으므로 제거되었을 수 있다.
+	//비동기 작업을 시작할 때 boost::bind()를 사용하는 경우 핸들러의 매개 변수 목록과 일치하는 인수만 지정해야한다.
+	//여기서는 placeholders들이 handle_write()에서 사용되지 않았으므로 제거되었을 수 있다.
     boost::asio::async_write(socket_, boost::asio::buffer(message_),
         boost::bind(&tcp_connection::handle_write, shared_from_this(),
           boost::asio::placeholders::error,
