@@ -1,23 +1,45 @@
-#include <iostream>
-#include <boost/asio>
-
 /*
- * 서버는 클라이언트들을 관리한다.
- * 첫번째 목표는 하나의 방을 만들고 여기에 클라이언트를 접속한다.
- *
- * 서버작동과정
- * 1. 소켓생성
- * 2. IP, PORT 설정 
- * 3. 접속대기
- * 4. 메시지 교환
- * 5. 종료
- * 6. 소켓제거
+ * 1.간단하게 서버를 열고 여러명의 클라이언트들을 접속시킨다.
+ * 2. 클라이언트로부터 메시지를 받아 서버에 띄운다.
+ * 3. 받은 메시지를 클라이언트들에게 뿌린다.
  */
+
+#include <iostream>
+#include <string>
+#include <list>
+#include <boost/asio>
+using namespace std;
+std::string make_daytime_string()
+{
+	using namespace std;
+	time_t now = time(0);
+	return ctime(&now);
+}
 
 class server
 {
-	:wq
-}
+public:
+	server(boost::asio::io_context& io_context, short port)
+		: macceptor(io_context, boost::asio::ip::tcp::endpoint(boost::asio::ip::tcp::v4(), port)),
+		socket_(io_context)
+	{
+		accept();
+	}
+
+private:
+	void accept()
+	{
+
+	}
+
+	void handle_accept(participant::shared_ptr<participant> new_participant,
+			const boost::system::error_code& error)
+	{
+	}
+
+	boost::asio::ip::tcp::acceptor acceptor_;
+	// list participant
+};
 
 int main(int argc, char *argv[])
 {
@@ -26,11 +48,10 @@ int main(int argc, char *argv[])
 			std::cerr << "Usage:  chat_server <port> : <port>\n";
 			return 1;
 		}	
-
 		boost::asio::io_context io_context;
-
+		boost::asio::tcp::ip::endpoint endpoint		
 		// do something 
-	
+		io_context.run();						// 이벤트 콜백이 끝날때까지 대기
 	}
 	catch(std::exception& e)
 	{

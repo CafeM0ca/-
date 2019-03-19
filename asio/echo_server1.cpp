@@ -1,44 +1,65 @@
+
+#include <cstdlib>
 #include <iostream>
-#include <string>
+#include <thread>
+#include <utility>
 #include <boost/asio.hpp>
-using namespace std;
 
-const string serverIP{ "127.0.0.1" };
-const short port = 31400;
+using boost::asio::ip::tcp;
 
-int main()
+const int max_length = 1024;
+
+void session(tcp::socket sock)
 {
-	boost::asio::io_context io_context;
-	boost::asio::ip::tcp::endpoint endpoint(boost::asio::ip::tcp::v4(), port);
-	boost::asio::ip::tcp::acceptor acceptor(io_context, endpoint);
-	boost::asio::ip::tcp::socket socket(io_context);
+  try
+  {
+    for (;;)
+    {
+      char data[max_length];
 
-	acceptor.accept(socket);
+      boost::system::error_code error;
+      size_t length = sock.read_some(boost::asio::buffer(data), error);
+      if (error == boost::asio::error::eof)
+        break; // Connection closed cleanly by peer.
+      else if (error)
+        throw boost::system::system_error(error); // Some other error.
 
-	cout << "conect clinent" << endl;
+      boost::asio::write(sock, boost::asio::buffer(data, length));
+    }
+  }
+  catch (std::exception& e)
+  {
+    std::cerr << "Exception in thread: " << e.what() << "\n";
+  }
+}
 
-	for(;;)
-	{
-		string buf;
-		boost::system::error_code error;
-		socket.read_some(boost::asio::buffer(buf), error);
+void server(boost::asio::io_context& io_context, unsigned short port)
+{
+  tcp::acceptor a(io_context, tcp::endpoint(tcp::v4(), port));
+  for (;;)
+  {
+    std::thread(session, a.accept()).detach();
+  }
+}
 
-		if(error)
-		{
-			if(error == boost::asio::error::eof)
-				cout << "disconnected" << endl;
-			else
-				cout << "error No." << error.value() << ", error message: " << error.message() << endl;
-			break;	
-		}
-		cout << "Say Clinent: " << buf << endl;
-		string r_buf;
-		boost::system::error_code r_error;
+int main(int argc, char* argv[])
+{
+  try
+  {
+    if (argc != 2)
+    {
+      std::cerr << "Usage: blocking_tcp_echo_server <port>\n";
+      return 1;
+    }
 
-		getline(cin, buf);
-		socket.write_some(boost::asio::buffer(buf, buf.size()), r_error);
-		cout << "send message: " << buf << endl;
+    boost::asio::io_context io_context;
 
-	}
-	return 0;
+    server(io_context, std::atoi(argv[1]));
+  }
+  catch (std::exception& e)
+  {
+    std::cerr << "Exception: " << e.what() << "\n";
+  }
+
+  return 0;
 }

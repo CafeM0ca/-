@@ -1,56 +1,47 @@
+
+#include <cstdlib>
+#include <cstring>
 #include <iostream>
 #include <boost/asio.hpp>
 
-using namespace std;
-using namespace boost::asio;
-const string serverIP{ "127.0.0.1" };
-const short port = 31400;
+using boost::asio::ip::tcp;
 
-int main()
+enum { max_length = 1024 };
+
+int main(int argc, char* argv[])
 {
-	boost::asio::io_context io_context;
-	boost::asio::ip::tcp::endpoint endpoint(boost::asio::ip::address::from_string(serverIP), port);
-	boost::asio::ip::tcp::socket socket(io_context);
-	boost::system::error_code c_error;
+  try
+  {
+    if (argc != 3)
+    {
+      std::cerr << "Usage: blocking_tcp_echo_client <host> <port>\n";
+      return 1;
+    }
 
-	socket.connect(endpoint, c_error);
-	if(c_error)
-	{
-		if(c_error == boost::asio::error::eof)
-			cout << "disconnected" << endl;
-		else
-			cout << "error No." << c_error.value() << ", error message" << c_error.message() << endl;
-		getchar();
-		return 0;
-	}
-	cout << "Success server connection" << endl;
-	for(int i = 0; i < 7; i++)
-	{
-		string buf;
-		getline(cin, buf);
-		boost::system::error_code error;
-		socket.write_some(boost::asio::buffer(buf, buf.size()), error);
-		cout << "send meesage: " << buf << endl;
+    boost::asio::io_context io_context;
 
-		string r_buf;
-		boost::system::error_code r_error;
-		socket.read_some(boost::asio::buffer(r_buf), r_error);
-		if(r_error)
-		{
-			if(r_error == boost::asio::error::eof)
-				cout << "disconnected" << endl;
-			else
-				cout << "error No." << r_error.value() << ", error message" << r_error.message() << endl;
-			break;
-		}
-		cout << "Say server: " << r_buf << endl;
-	}
-	if(socket.is_open())
-	{
-		socket.close();
+    tcp::socket s(io_context);
+    tcp::resolver resolver(io_context);
+    boost::asio::connect(s, resolver.resolve(argv[1], argv[2]));
 
-	}
-	cout << "close client" << endl;
-	return 0;
+    std::cout << "Enter message: ";
+    char request[max_length];
+    std::cin.getline(request, max_length);
+    size_t request_length = std::strlen(request);
+    boost::asio::write(s, boost::asio::buffer(request, request_length));
+
+    char reply[max_length];
+    size_t reply_length = boost::asio::read(s,
+        boost::asio::buffer(reply, request_length));
+    std::cout << "Reply is: ";
+    std::cout.write(reply, reply_length);
+    std::cout << "\n";
+  }
+  catch (std::exception& e)
+  {
+    std::cerr << "Exception: " << e.what() << "\n";
+  }
+
+  return 0;
 }
 

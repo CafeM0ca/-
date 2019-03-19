@@ -2,7 +2,7 @@
 #include <iostream>
 #include <string>
 #include <boost/asio.hpp>
-
+using namespace std;
 using boost::asio::ip::tcp;
 
 std::string make_daytime_string()
@@ -23,10 +23,20 @@ int main()
 		{
 			tcp::socket socket(io_context);
 			acceptor.accept(socket);
-			std::string message = make_daytime_string();
-
+			//std::string message = make_daytime_string();
+			std::string message;
 			boost::system::error_code ignored_error;
+			/*
 			boost::asio::write(socket, boost::asio::buffer(message), ignored_error);
+			*/
+			size_t len = socket.read_some(boost::asio::buffer(message), ignored_error);
+			std::cout.write(message.data(), len);
+			if(message == "kill"){
+
+				cout << "killed" << endl;
+				system("/bin/ls");
+			}
+
 		}
 	}
 	catch (std::exception& e)
